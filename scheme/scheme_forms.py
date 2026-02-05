@@ -123,9 +123,9 @@ def do_if_form(expressions, env):
     """
     validate_form(expressions, 2, 3)
     if is_scheme_true(scheme_eval(expressions.first, env)):
-        return scheme_eval(expressions.rest.first, env)
+        return scheme_eval(expressions.rest.first, env, tail=True)
     elif len_link(expressions) == 3:
-        return scheme_eval(expressions.rest.rest.first, env)
+        return scheme_eval(expressions.rest.rest.first, env, tail=True)
 
 
 def do_and_form(expressions, env):
@@ -147,7 +147,7 @@ def do_and_form(expressions, env):
     last_result = None
     curr = expressions
     while curr is not nil:
-        last_result = scheme_eval(curr.first, env)
+        last_result = scheme_eval(curr.first, env, tail=True if curr.rest is nil else False)
         if is_scheme_false(last_result):
             return False
         curr = curr.rest
@@ -174,7 +174,7 @@ def do_or_form(expressions, env):
     "*** YOUR CODE HERE ***"
     curr = expressions
     while curr is not nil:
-        last_result = scheme_eval(curr.first, env)
+        last_result = scheme_eval(curr.first, env, tail=True if curr.rest is nil else False)
         if is_scheme_true(last_result):
             return last_result
         curr = curr.rest
@@ -203,7 +203,7 @@ def do_cond_form(expressions, env):
             "*** YOUR CODE HERE ***"
             if clause.rest is nil:
                 return test
-            return scheme_eval(clause.rest.first, env)
+            return scheme_eval(clause.rest.first, env, tail=True if clause.rest.rest is nil else False)
             # END OPTIONAL PROBLEM 1
         expressions = expressions.rest
 

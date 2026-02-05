@@ -40,14 +40,29 @@ def scheme_eval(expr, env, _=None): # Optional third argument is ignored
 
         # scheme_eval 一个符号可以 lookup 到这个 procedure
         procedure = scheme_eval(first, env)
-        def eval_all(operands, env):
-            if operands is nil:
-                return nil
-            # 递归解析后面的 rest
-            return Link(scheme_eval(operands.first, env), eval_all(operands.rest, env))
+        # def get_args(operands, env):
+        #     if operands is nil:
+        #         return nil
+        #     # 递归解析后面的 rest
+        #     return Link(scheme_eval(operands.first, env), get_args(operands.rest, env))
         
-        computed_args = eval_all(rest, env)
-        return scheme_apply(procedure, computed_args, env)
+        # computed_args = get_args(rest, env)
+        val_list = []
+        curr = rest
+        while curr is not nil:
+            # 注意：参数求值不是尾调用，tail 默认为 False
+            val = scheme_eval(curr.first, env)
+            val_list.append(val)
+            curr = curr.rest
+            
+        # 2. 将 Python 列表转换回 Scheme 的 Link 链表
+        # (从后往前组装，这样比较快)
+        args = nil
+        for val in reversed(val_list):
+            args = Link(val, args)
+        # args = rest.map(lambda operand: scheme_eval(operand, env))
+
+        return scheme_apply(procedure, args, env)
         # END PROBLEM 3
 
 def scheme_apply(procedure: Procedure, args: Link, env):
@@ -102,9 +117,11 @@ def eval_all(expressions, env):
     if expressions is nil:
         return None
     
-    first_value = scheme_eval(expressions.first, env)
     if expressions.rest is nil:
-        return first_value
+        return scheme_eval(expressions.first, env, tail=True)
+    
+    scheme_eval(expressions.first, env)
+    
     return eval_all(expressions.rest, env)
     # END PROBLEM 6
 
@@ -141,6 +158,10 @@ def optimize_tail_calls(unoptimized_scheme_eval):
         result = Unevaluated(expr, env)
         # BEGIN OPTIONAL PROBLEM 3
         "*** YOUR CODE HERE ***"
+        while isinstance(result, Unevaluated):
+            result = unoptimized_scheme_eval(result.expr, result.env)
+
+        return result
         # END OPTIONAL PROBLEM 3
     return optimized_eval
 
@@ -161,4 +182,4 @@ def optimize_tail_calls(unoptimized_scheme_eval):
 # Uncomment the following line to apply tail call optimization #
 ################################################################
 
-# scheme_eval = optimize_tail_calls(scheme_eval)
+scheme_eval = optimize_tail_calls(scheme_eval)
